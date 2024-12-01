@@ -1,3 +1,5 @@
+import gleam/dict
+import gleam/function
 import gleam/int
 import gleam/list
 import gleam/result
@@ -31,8 +33,17 @@ pub fn pt_1(input: #(List(Int), List(Int))) -> Int {
 }
 
 pub fn pt_2(input: #(List(Int), List(Int))) -> Int {
+  // let #(left, right) = input
+  // left
+  // |> list.map(fn(n) { n * list.count(right, fn(x) { x == n }) })
+  // |> int.sum
+  // Optimized here, 1 time count
   let #(left, right) = input
+  let cntr =
+    list.group(right, function.identity)
+    |> dict.map_values(fn(_, b) { list.length(b) })
+
   left
-  |> list.map(fn(n) { n * list.count(right, fn(x) { x == n }) })
+  |> list.map(fn(x) { x * { dict.get(cntr, x) |> result.unwrap(0) } })
   |> int.sum
 }
