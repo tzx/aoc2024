@@ -3,58 +3,36 @@ import gleam/list
 import gleam/result
 import gleam/string
 
-pub fn pt_1(st: String) -> Int {
-  let lines = string.split(st, "\n")
-  let numbers = list.map(lines, sp)
-  let lefts =
-    list.map(numbers, fn(nums: List(String)) {
-      list.first(nums)
-      |> result.lazy_unwrap(p)
-      |> int.parse()
-      |> result.lazy_unwrap(p)
+fn parse_pair(p: #(a, a), f: fn(a) -> Result(b, c)) -> Result(#(b, b), c) {
+  use a <- result.try(f(p.0))
+  use b <- result.try(f(p.1))
+  Ok(#(a, b))
+}
+
+pub fn parse(st: String) -> #(List(Int), List(Int)) {
+  let assert Ok(pairs) =
+    st
+    |> string.split("\n")
+    |> list.try_map(fn(s) {
+      string.split_once(s, "   ")
+      |> result.try(parse_pair(_, int.parse))
     })
-    |> list.sort(by: int.compare)
-  let rights =
-    list.map(numbers, fn(nums: List(String)) {
-      list.last(nums)
-      |> result.lazy_unwrap(p)
-      |> int.parse()
-      |> result.lazy_unwrap(p)
-    })
-    |> list.sort(by: int.compare)
-  list.zip(lefts, rights)
-  |> list.map(fn(nums) { int.absolute_value(nums.0 - nums.1) })
+  list.unzip(pairs)
+}
+
+pub fn pt_1(input: #(List(Int), List(Int))) -> Int {
+  let pairs = #(
+    list.sort(input.0, int.compare),
+    list.sort(input.1, int.compare),
+  )
+  list.zip(pairs.0, pairs.1)
+  |> list.map(fn(p) { int.absolute_value(p.0 - p.1) })
   |> list.fold(0, int.add)
 }
 
-fn sp(st: String) -> List(String) {
-  string.split(st, "   ")
-}
-
-fn p() {
-  panic
-}
-
-pub fn pt_2(st: String) -> Int {
-  let lines = string.split(st, "\n")
-  let numbers = list.map(lines, sp)
-  let lefts =
-    list.map(numbers, fn(nums: List(String)) {
-      list.first(nums)
-      |> result.lazy_unwrap(p)
-      |> int.parse()
-      |> result.lazy_unwrap(p)
-    })
-    |> list.sort(by: int.compare)
-  let rights =
-    list.map(numbers, fn(nums: List(String)) {
-      list.last(nums)
-      |> result.lazy_unwrap(p)
-      |> int.parse()
-      |> result.lazy_unwrap(p)
-    })
-    |> list.sort(by: int.compare)
-
-  list.map(lefts, fn(n) { n * list.count(rights, fn(x) { x == n }) })
-  |> int.sum()
+pub fn pt_2(input: #(List(Int), List(Int))) -> Int {
+  let #(left, right) = input
+  left
+  |> list.map(fn(n) { n * list.count(right, fn(x) { x == n }) })
+  |> int.sum
 }
